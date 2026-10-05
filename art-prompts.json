@@ -13,6 +13,16 @@
     {
       "file": "creative.webp",
       "prompt": "Use case: stylized-concept. Asset type: landscape editorial illustration for DVOR street gaming club website, 3:2 composition. Overhead still life of a street-zine workbench: cut blank torn paper, lime sticker sheets with simple abstract shapes and no words, scissors, black marker, compact generic camera, cutout graphic scraps on rough concrete desktop. An authored asymmetrical editorial collage with clear large subjects, paper grains and subtle ink halftone; photoreal materials, bold clean composition. Charcoal black, warm off-white and one acid lime #c6f52a accent only. No faces, no brands, no readable text, no watermark. Illustration for DIY posters and creativity."
+    },
+    {
+      "file": "hero-foreground-v6.webp",
+      "source": "hero.webp",
+      "prompt": "Transparent foreground cutout of the original crouching skater, controller, shoes and skateboard. Preserve outfit, pose, original square canvas position and scale. Remove background, paper and courtyard. No text or redesign."
+    },
+    {
+      "file": "hero-background-v6.webp",
+      "source": "hero.webp",
+      "prompt": "Empty background clean plate of the original collage. Remove skater, controller, shoes and skateboard; reconstruct courtyard and torn lime paper. Preserve square framing, buildings, hoop, photocopy texture and black/lime palette. No people or text."
     }
   ]
 }

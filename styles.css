@@ -36,3 +36,14 @@ html{scrollbar-color:var(--line) var(--bg)}input,textarea{caret-color:var(--acce
 
 /* Two identical groups share one continuous loop. */
 .motion-strip-track{display:flex;width:max-content}.motion-strip-group{display:flex;flex:0 0 auto}.motion-strip-unit{display:block;flex:0 0 auto}
+
+/* v6: layered poster, courtyard portal, material-specific cards. */
+.hero-art{position:relative}.hero-art img{position:absolute;inset:0;display:block}.hero-foreground{z-index:1;pointer-events:none}
+.portal-section{padding-block:65px;background:var(--bg)}.portal-layout{display:grid;grid-template-columns:1.25fr 1fr;align-items:center;gap:65px;min-height:65svh}.portal-visual{position:relative;aspect-ratio:1.3;overflow:hidden;border:1px solid var(--line);background:#151614}.portal-visual>img,.portal-screen,.portal-screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.portal-screen{visibility:hidden;opacity:0;overflow:hidden}.portal-signal{position:absolute;left:9%;top:31%;font:500 13px Oswald,sans-serif;color:#c6f52a;letter-spacing:.1em}.portal-label{position:absolute;bottom:22px;left:22px;padding:10px 15px;background:var(--accent);color:var(--ink);font:600 24px Oswald,sans-serif;transform:rotate(-3deg)}
+.world-coop:after{content:'';position:absolute;inset:16px 16px 110px;pointer-events:none;border:1px solid rgba(198,245,42,.45);background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(0,0,0,.06) 4px 5px)}
+.world-street:before{content:'';position:absolute;z-index:1;right:26px;top:12px;width:75px;height:23px;background:#c6f52ab8;transform:rotate(13deg)}
+.world-creative{clip-path:polygon(0 1%,16% 0,32% 1%,49% 0,65% 1%,80% 0,100% 1%,100% 99%,80% 100%,62% 99%,45% 100%,23% 99%,0 100%)}
+.event-grid{position:relative}.event-poster[data-kind=online]{border-top:4px solid var(--accent)}.event-poster[data-kind=online] .poster-copy{background-image:repeating-linear-gradient(0deg,transparent 0 6px,rgba(130,150,90,.035) 6px 7px)}
+.event-poster[data-kind=street] .poster-copy{border-top:7px solid var(--accent)}.event-poster[data-kind=street] h2{transform:rotate(-2deg);transform-origin:left center}
+.event-poster[data-kind=creative] .poster-copy{background:#e6e6db;color:#191b16;border-top:12px solid var(--accent)}.event-poster[data-kind=creative] .poster-copy p,.event-poster[data-kind=creative] .event-kind{color:#555b4d}.event-poster[data-kind=creative] .poster-copy h2{letter-spacing:-.035em}
+@media(max-width:700px){.portal-section{padding-block:25px 55px}.portal-layout{grid-template-columns:1fr;gap:30px;min-height:auto}.portal-visual{aspect-ratio:1.15}.portal-label{font-size:20px;left:15px;bottom:15px}.portal-signal{font-size:10px}.world-coop:after{inset:12px 12px 105px}}

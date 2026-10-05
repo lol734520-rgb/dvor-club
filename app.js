@@ -29,6 +29,7 @@
   // Native scrolling, GSAP choreography. All content works without animation.
   if (window.gsap && window.ScrollTrigger) {
     gsap.registerPlugin(ScrollTrigger);
+    if (window.Flip) gsap.registerPlugin(Flip);
     const mm = gsap.matchMedia();
     const veil = document.createElement('div');
     veil.className = 'page-veil'; veil.setAttribute('aria-hidden', 'true');
@@ -49,22 +50,35 @@
       const art = document.querySelector('.hero-art');
       if (art) {
         tl.from(art, {clipPath:'inset(0 0 100% 0)',autoAlpha:0,rotation:-3,duration:.85}, .06);
-        const artImage = art.querySelector('img');
-        gsap.set(artImage,{scale:1.1,yPercent:-4});
+        const background = art.querySelector('.hero-background');
+        const foreground = art.querySelector('.hero-foreground');
+        gsap.fromTo(background,{scale:1.08,yPercent:-2},{scale:1.16,yPercent:4,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1.2}});
+        gsap.fromTo(foreground,{scale:1.02,yPercent:0},{scale:1.08,yPercent:9,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1}});
         tl.from('.hero-stamp',{x:-20,y:10,scale:.85,rotation:-18,autoAlpha:0,duration:.55},.48);
-        gsap.fromTo(artImage,{yPercent:-4,scale:1.1},{yPercent:6,scale:1.2,ease:'none',immediateRender:false,scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1.2}});
         if (context.conditions.desktop) gsap.to('.hero-copy',{y:35,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1}});
         if (context.conditions.pointer) {
           const rotateX=gsap.quickTo(art,'rotationX',{duration:.5,ease:'power3.out'});
           const rotateY=gsap.quickTo(art,'rotationY',{duration:.5,ease:'power3.out'});
           const stage=art.parentElement;
+          const shiftX=gsap.quickTo(foreground,'x',{duration:.7,ease:'power3.out'});
+          const shiftY=gsap.quickTo(foreground,'y',{duration:.7,ease:'power3.out'});
           let bounds;
           const enter=()=>{bounds=stage.getBoundingClientRect();};
-          const move=e=>{if(!bounds)return;rotateY(((e.clientX-bounds.left)/bounds.width-.5)*5);rotateX(-((e.clientY-bounds.top)/bounds.height-.5)*5);};
-          const leave=()=>{bounds=null;rotateX(0);rotateY(0);};
+          const move=e=>{if(!bounds)return;rotateY(((e.clientX-bounds.left)/bounds.width-.5)*5);rotateX(-((e.clientY-bounds.top)/bounds.height-.5)*5);shiftX(((e.clientX-bounds.left)/bounds.width-.5)*12);shiftY(((e.clientY-bounds.top)/bounds.height-.5)*8);};
+          const leave=()=>{bounds=null;rotateX(0);rotateY(0);shiftX(0);shiftY(0);};
           stage.addEventListener('pointerenter',enter);stage.addEventListener('pointermove',move);stage.addEventListener('pointerleave',leave);
           cleanups.push(()=>{stage.removeEventListener('pointerenter',enter);stage.removeEventListener('pointermove',move);stage.removeEventListener('pointerleave',leave);});
         }
+      }
+      const portal=document.querySelector('.portal-section');
+      if(portal){
+        const sequence=gsap.timeline({scrollTrigger:{trigger:portal,start:context.conditions.desktop?'top top':'top 65%',end:context.conditions.desktop?'+=650':'bottom 30%',pin:context.conditions.desktop,scrub:.8,anticipatePin:1}});
+        sequence.set('.portal-screen',{autoAlpha:1})
+          .fromTo('.portal-screen img',{scale:1},{scale:3.6,transformOrigin:'30% 34%',ease:'power2.inOut',duration:1})
+          .to('.portal-signal',{autoAlpha:0,duration:.2},.15)
+          .to('.portal-screen',{autoAlpha:0,duration:.35},.65)
+          .fromTo('.portal-court',{scale:1.16},{scale:1,ease:'power2.out',duration:.65},.65)
+          .from('.portal-label',{y:18,autoAlpha:0,duration:.3},1);
       }
       document.querySelectorAll('.reveal').forEach(el => {
         // Do not hide cards that can be revealed by a category filter.
@@ -131,21 +145,24 @@
   }
 
   const filterButtons = [...document.querySelectorAll('[data-filter]')];
+  const cards = [...document.querySelectorAll('[data-kind]')];
+  let filtering;
   filterButtons.forEach(button => button.addEventListener('click', () => {
+    if(button.getAttribute('aria-pressed')==='true') return;
+    const animate=window.gsap && window.Flip && matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    if(filtering) filtering.progress(1);
+    const state=animate ? Flip.getState(cards) : null;
     filterButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
     const kind = button.dataset.filter;
-    let count = 0;
-    document.querySelectorAll('[data-kind]').forEach(item => {
-      item.hidden = kind !== 'all' && item.dataset.kind !== kind;
-      if (!item.hidden) count++;
-    });
-    document.getElementById('filter-status').textContent = `Показано движей: ${count}`;
-    if (window.gsap && matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-      const visible = [...document.querySelectorAll('[data-kind]')].filter(item => !item.hidden);
-      gsap.killTweensOf(visible);
-      gsap.fromTo(visible,{opacity:.6,y:8},{opacity:1,y:0,duration:.25,stagger:.035,ease:'power2.out',clearProps:'opacity,transform'});
-    }
-    if (window.ScrollTrigger) ScrollTrigger.refresh();
+    cards.forEach(item => {item.hidden = kind !== 'all' && item.dataset.kind !== kind; item.inert=item.hidden;});
+    document.getElementById('filter-status').textContent = `Показано движей: ${cards.filter(item=>!item.hidden).length}`;
+    if(animate){
+      filtering=Flip.from(state,{duration:.55,ease:'power3.inOut',scale:true,absolute:true,
+        onEnter:elements=>gsap.fromTo(elements,{autoAlpha:0,scale:.94},{autoAlpha:1,scale:1,duration:.35,clearProps:'opacity,visibility,transform'}),
+        onLeave:elements=>gsap.to(elements,{autoAlpha:0,scale:.94,duration:.25}),
+        onComplete:()=>{gsap.set(cards,{clearProps:'opacity,visibility,transform'});ScrollTrigger.refresh();}
+      });
+    } else if(window.ScrollTrigger) ScrollTrigger.refresh();
   }));
 
   const form = document.getElementById('join-form');
