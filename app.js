@@ -75,7 +75,6 @@
         const sequence=gsap.timeline({scrollTrigger:{trigger:portal,start:context.conditions.desktop?'top top':'top 65%',end:context.conditions.desktop?'+=650':'bottom 30%',pin:context.conditions.desktop,scrub:.8,anticipatePin:1}});
         sequence.set('.portal-screen',{autoAlpha:1})
           .fromTo('.portal-screen img',{scale:1},{scale:3.6,transformOrigin:'30% 34%',ease:'power2.inOut',duration:1})
-          .to('.portal-signal',{autoAlpha:0,duration:.2},.15)
           .to('.portal-screen',{autoAlpha:0,duration:.35},.65)
           .fromTo('.portal-court',{scale:1.16},{scale:1,ease:'power2.out',duration:.65},.65)
           .from('.portal-label',{y:18,autoAlpha:0,duration:.3},1);
@@ -164,6 +163,92 @@
       });
     } else if(window.ScrollTrigger) ScrollTrigger.refresh();
   }));
+
+  const canMove=()=>window.gsap && matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  document.querySelectorAll('.wordmark').forEach(logo=>{
+    const letters=logo.querySelectorAll('.logo-letter');
+    const scatter=()=>{if(canMove())gsap.to(letters,{y:i=>[0,-3,3,-2][i],rotation:i=>[-4,3,-2,4][i],duration:.3,stagger:.025,overwrite:true});};
+    const assemble=()=>{if(window.gsap)gsap.to(letters,{y:0,rotation:0,duration:canMove()?.35:0,stagger:.025,overwrite:true});};
+    logo.addEventListener('pointerenter',scatter);logo.addEventListener('pointerleave',assemble);
+    logo.addEventListener('focus',scatter);logo.addEventListener('blur',assemble);
+    logo.addEventListener('click',e=>{assemble();if(new URL(logo.href).pathname===location.pathname)e.preventDefault();});
+  });
+
+  const vibes={
+    online:{image:'coop.webp',alt:'Геймпады и ретро-монитор во дворе',title:'НАЙДИ СВОЮ ТИМУ.',copy:'Кооп, инди и кастомки. Можно без опыта и высокого ранга. Главное, чтобы вместе было интересно.',link:'events.html#lan',cta:'Посмотреть кооп'},
+    street:{image:'street.webp',alt:'Скейтборд и баскетбольное кольцо на бетонной площадке',title:'ВСТРЕТИМСЯ ВНЕ ЭКРАНА.',copy:'Скейт, площадка и разговоры до темноты. Приходи кататься, учиться или просто быть рядом.',link:'events.html#street',cta:'Посмотреть уличные движи'},
+    creative:{image:'creative.webp',alt:'Бумага, стикеры и инструменты для создания зина',title:'СОБЕРИ ЧТО-НИБУДЬ СВОЁ.',copy:'Постер, короткий ролик или стикерпак. Можно начать с одной странной идеи и найти тех, кто поможет.',link:'events.html#remix',cta:'Посмотреть креатив'}
+  };
+  const vibePanel=document.querySelector('.vibe-panel');
+  if(vibePanel){
+    const buttons=[...document.querySelectorAll('[data-vibe]')];
+    const content=vibePanel.querySelector('.vibe-copy');
+    const image=vibePanel.querySelector('img');
+    buttons.forEach(button=>button.addEventListener('click',()=>{
+      if(button.getAttribute('aria-pressed')==='true')return;
+      const data=vibes[button.dataset.vibe];
+      buttons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+      vibePanel.dataset.vibe=button.dataset.vibe;
+      image.src=data.image;image.alt=data.alt;
+      content.querySelector('h3').textContent=data.title;
+      content.querySelector('p').textContent=data.copy;
+      const link=content.querySelector('a');link.href=data.link;link.textContent=data.cta+' ↗';
+      if(canMove()){
+        gsap.fromTo(image,{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0% 0)',duration:.5,ease:'power3.out',overwrite:true});
+        gsap.fromTo(content,{opacity:.5,y:8},{opacity:1,y:0,duration:.35,overwrite:true,clearProps:'opacity,transform'});
+      }
+      if(window.ScrollTrigger)ScrollTrigger.refresh();
+    }));
+    Object.values(vibes).forEach(data=>{const preload=new Image();preload.src=data.image;});
+  }
+
+  const stickers=[...document.querySelectorAll('.drag-sticker')];
+  const reset=document.querySelector('.sticker-reset');
+  stickers.forEach(sticker=>{
+    let drag=null,x=0,y=0;
+    const paint=()=>{sticker.style.translate=`${x}px ${y}px`;};
+    const constrain=(nextX,nextY)=>{
+      const stage=sticker.parentElement.getBoundingClientRect();
+      const rect=sticker.getBoundingClientRect();
+      const left=rect.left-stage.left-x,top=rect.top-stage.top-y;
+      x=Math.max(-left,Math.min(stage.width-left-rect.width,nextX));
+      y=Math.max(-top,Math.min(stage.height-top-rect.height,nextY));paint();
+    };
+    sticker.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x,y};sticker.setPointerCapture(e.pointerId);sticker.classList.add('dragging');});
+    sticker.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;constrain(drag.x+e.clientX-drag.startX,drag.y+e.clientY-drag.startY);});
+    const finish=()=>{drag=null;sticker.classList.remove('dragging');};
+    sticker.addEventListener('pointerup',finish);sticker.addEventListener('pointercancel',finish);sticker.addEventListener('lostpointercapture',finish);
+    sticker.addEventListener('keydown',e=>{const shifts={ArrowLeft:[-10,0],ArrowRight:[10,0],ArrowUp:[0,-10],ArrowDown:[0,10]};if(shifts[e.key]){e.preventDefault();constrain(x+shifts[e.key][0],y+shifts[e.key][1]);}});
+    const restore=()=>{x=0;y=0;paint();finish();};reset?.addEventListener('click',restore);window.addEventListener('resize',restore);
+  });
+
+  const dialog=document.querySelector('.event-dialog');
+  if(dialog){
+    let opener=null,animation=null;
+    const sheet=dialog.querySelector('.event-sheet');
+    const close=()=>{
+      animation?.kill();
+      if(!dialog.open)return;
+      const finish=()=>{dialog.close();document.body.classList.remove('dialog-open');sheet.style.cssText='';opener?.focus({preventScroll:true});};
+      if(canMove()){const a=opener.closest('.event-poster').getBoundingClientRect(),b=sheet.getBoundingClientRect();animation=gsap.to(sheet,{x:a.left+a.width/2-b.left-b.width/2,y:a.top+a.height/2-b.top-b.height/2,scale:Math.min(.9,a.width/b.width),opacity:0,duration:.25,ease:'power2.inOut',onComplete:finish});}else finish();
+    };
+    document.querySelectorAll('[data-event-details]').forEach(button=>button.addEventListener('click',()=>{
+      const card=button.closest('.event-poster');opener=button;animation?.kill();
+      dialog.querySelector('h2').textContent=card.querySelector('h2').innerText.replace(/\s+/g,' ').trim();
+      dialog.querySelector('.dialog-description').textContent=card.querySelector('.poster-copy p').textContent;
+      dialog.querySelector('.dialog-format').textContent=card.dataset.kind==='online'?'Онлайн, без требований к рангу':card.dataset.kind==='street'?'На площадке, без соревнований':'Вместе создаём постеры, видео и стикеры';
+      dialog.querySelector('.dialog-for').textContent=card.dataset.kind==='street'?'Для тех, кто катается, учится или хочет познакомиться':card.dataset.kind==='creative'?'Для новичков и тех, у кого уже есть своя идея':'Для новичков и опытных игроков, которым важна компания';
+      const art=dialog.querySelector('.dialog-art');const source=card.querySelector('img');
+      art.hidden=!source;if(source){art.src=source.src;art.alt=source.alt;}
+      dialog.querySelector('.dialog-join').href=card.querySelector('.text-link').href;
+      dialog.showModal();document.body.classList.add('dialog-open');
+      const a=card.getBoundingClientRect(),b=sheet.getBoundingClientRect();
+      if(canMove())animation=gsap.fromTo(sheet,{x:a.left+a.width/2-b.left-b.width/2,y:a.top+a.height/2-b.top-b.height/2,scale:Math.min(.9,a.width/b.width),opacity:.5},{x:0,y:0,scale:1,opacity:1,duration:.45,ease:'power3.out',clearProps:'transform,opacity'});
+    }));
+    dialog.querySelector('.dialog-close').addEventListener('click',close);
+    dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+    dialog.addEventListener('click',e=>{if(e.target===dialog)close();});
+  }
 
   const form = document.getElementById('join-form');
   if (!form) return;
