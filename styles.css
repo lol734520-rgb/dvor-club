@@ -57,3 +57,6 @@ html{scrollbar-color:var(--line) var(--bg)}input,textarea{caret-color:var(--acce
 @media(max-width:700px){.drag-sticker{font-size:18px;min-width:63px;min-height:63px;padding:11px 13px}.sticker-team{right:12px;top:10px}.sticker-rank{right:15px;bottom:116px}.sticker-tools{gap:8px;align-items:start}.sticker-tools>span{max-width:19ch}.vibe-panel{grid-template-columns:1fr;gap:28px}.vibe-copy h3{font-size:40px}.vibe-selector button{padding:10px 22px;font-size:20px}.event-dialog{max-width:calc(100vw - 24px);max-height:calc(100svh - 24px)}.event-sheet{grid-template-columns:1fr}.dialog-art{height:210px}.dialog-copy{padding:27px 23px}.dialog-copy h2{font-size:44px}.dialog-copy .button{width:100%;justify-content:space-between}}
 
 .wordmark .logo-letter{font-family:inherit;font-size:inherit;letter-spacing:inherit;vertical-align:baseline;margin:0}.hero-stamp{bottom:110px}@media(max-width:700px){.hero-stamp{bottom:105px}}
+
+/* Keep filter layout in flow while its height transitions. */
+.event-grid{align-content:start}.event-dialog{transform-origin:center}
