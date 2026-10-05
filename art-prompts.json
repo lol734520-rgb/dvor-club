@@ -1,0 +1,18 @@
+{
+  "tool": "Built-in image_gen",
+  "date": "2026-10-05",
+  "assets": [
+    {
+      "file": "coop.webp",
+      "prompt": "Use case: stylized-concept. Asset type: landscape editorial illustration for DVOR street gaming club website, 3:2 composition. An atmospheric retro gaming corner assembled in a concrete skate courtyard: chunky CRT monitor with abstract lime game graphics (no text), two generic game controllers, tangled cables, sticker-worn black equipment case, close wide perspective. Photoreal editorial collage with photocopied textures, torn-paper edges and bold composition, believable objects and material detail. Charcoal black, warm off-white and acid lime #c6f52a only, no purple or blue neon. No people, logos, brand marks, lettering or watermark. Illustration concept, not a photo of a real event. Leave subject fully inside frame."
+    },
+    {
+      "file": "street.webp",
+      "prompt": "Use case: stylized-concept. Asset type: landscape editorial illustration for DVOR street gaming club website, 3:2 composition. A scuffed skateboard resting on a low concrete ledge at an empty urban basketball and skate court, chain-link fence, basketball hoop and stairs receding in background. Extremely low camera angle, strong afternoon sidelight, bold close foreground board. Photoreal editorial collage, worn photocopy textures and torn-paper graphic fragments, charcoal black and warm off-white with acid lime #c6f52a tape/details. No people, no brand logos, no words, no watermark. Energetic street scene, not a real event photo. Keep skateboard complete inside frame."
+    },
+    {
+      "file": "creative.webp",
+      "prompt": "Use case: stylized-concept. Asset type: landscape editorial illustration for DVOR street gaming club website, 3:2 composition. Overhead still life of a street-zine workbench: cut blank torn paper, lime sticker sheets with simple abstract shapes and no words, scissors, black marker, compact generic camera, cutout graphic scraps on rough concrete desktop. An authored asymmetrical editorial collage with clear large subjects, paper grains and subtle ink halftone; photoreal materials, bold clean composition. Charcoal black, warm off-white and one acid lime #c6f52a accent only. No faces, no brands, no readable text, no watermark. Illustration for DIY posters and creativity."
+    }
+  ]
+}

@@ -38,25 +38,41 @@
       const cleanups = [];
       const intro = document.querySelector('.hero-copy, .page-intro, .join-heading, .legal');
       const title = intro?.querySelector('h1');
-      const tl = gsap.timeline({defaults:{duration:1,ease:'power4.out'}});
+      const tl = gsap.timeline({defaults:{duration:.8,ease:'expo.out'}});
       if (title) {
         const lines = title.querySelectorAll(':scope > span');
-        tl.from(lines.length ? lines : title, {y:55,autoAlpha:0,clipPath:'inset(100% 0 0 0)',stagger:.14}, .06);
+        if (intro.matches('.legal')) tl.from(title,{opacity:.7,duration:.2},0);
+        else tl.from(lines.length ? lines : title, {y:40,autoAlpha:0,clipPath:'inset(100% 0 0 0)',stagger:.1}, .04);
       }
       if (intro) tl.from(intro.querySelectorAll(intro.matches('.legal') ? ':scope > .eyebrow' : ':scope > .eyebrow, :scope > p:not(.eyebrow), :scope > .button'), {y:22,autoAlpha:0,stagger:.1,duration:.8}, .28);
       const hero = document.querySelector('.hero');
       const art = document.querySelector('.hero-art');
       if (art) {
-        tl.from(art, {clipPath:'inset(0 0 100% 0)',autoAlpha:0,rotation:0,duration:1.25}, .12);
+        tl.from(art, {clipPath:'inset(0 0 100% 0)',autoAlpha:0,rotation:-3,duration:.85}, .06);
         const artImage = art.querySelector('img');
-        tl.from(artImage,{scale:1.18,duration:1.7}, .12);
+        gsap.set(artImage,{scale:1.1,yPercent:-4});
+        tl.from('.hero-stamp',{x:-20,y:10,scale:.85,rotation:-18,autoAlpha:0,duration:.55},.48);
         gsap.fromTo(artImage,{yPercent:-4,scale:1.1},{yPercent:6,scale:1.2,ease:'none',immediateRender:false,scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1.2}});
-        if (context.conditions.desktop) gsap.to('.hero-copy',{y:75,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1}});
+        if (context.conditions.desktop) gsap.to('.hero-copy',{y:35,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1}});
+        if (context.conditions.pointer) {
+          const rotateX=gsap.quickTo(art,'rotationX',{duration:.5,ease:'power3.out'});
+          const rotateY=gsap.quickTo(art,'rotationY',{duration:.5,ease:'power3.out'});
+          const stage=art.parentElement;
+          let bounds;
+          const enter=()=>{bounds=stage.getBoundingClientRect();};
+          const move=e=>{if(!bounds)return;rotateY(((e.clientX-bounds.left)/bounds.width-.5)*5);rotateX(-((e.clientY-bounds.top)/bounds.height-.5)*5);};
+          const leave=()=>{bounds=null;rotateX(0);rotateY(0);};
+          stage.addEventListener('pointerenter',enter);stage.addEventListener('pointermove',move);stage.addEventListener('pointerleave',leave);
+          cleanups.push(()=>{stage.removeEventListener('pointerenter',enter);stage.removeEventListener('pointermove',move);stage.removeEventListener('pointerleave',leave);});
+        }
       }
       document.querySelectorAll('.reveal').forEach(el => {
         // Do not hide cards that can be revealed by a category filter.
         if (el.matches('.event-poster')) return;
-        gsap.from(el,{y:45,autoAlpha:0,duration:.95,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 91%',once:true}});
+        gsap.from(el,{y:20,autoAlpha:0,duration:.6,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 93%',once:true}});
+      });
+      document.querySelectorAll('.world-card').forEach(card => {
+        gsap.from(card.querySelector('img'),{clipPath:'inset(0 0 100% 0)',scale:1.08,duration:.7,ease:'expo.out',scrollTrigger:{trigger:card,start:'top 93%',once:true}});
       });
       document.querySelectorAll('.feature-image img, .join-art img').forEach(img => {
         gsap.fromTo(img,{scale:1.12,yPercent:-3},{scale:1.02,yPercent:3,ease:'none',scrollTrigger:{trigger:img.parentElement,start:'top bottom',end:'bottom top',scrub:1.1}});
@@ -66,10 +82,10 @@
       });
       const stripe = document.querySelector('.motion-strip-track');
       if (stripe) gsap.fromTo(stripe,{xPercent:3},{xPercent:-12,ease:'none',scrollTrigger:{trigger:stripe.parentElement,start:'top bottom',end:'bottom top',scrub:1}});
-      if (context.conditions.pointer) document.querySelectorAll('.event-poster, .event-teaser, .button').forEach(el => {
-        const target = el.querySelector('img, b, span[aria-hidden]');
+      if (context.conditions.pointer) document.querySelectorAll('.event-poster, .world-card, .event-teaser, .button').forEach(el => {
+        const target = el.querySelector('img, b, svg.arrow, span[aria-hidden]');
         if (!target) return;
-        const enter = context.add(null, () => gsap.to(target,el.matches('.event-poster') ? {scale:1.045,duration:.65,ease:'power3.out',overwrite:'auto'} : {x:4,y:-4,duration:.3,overwrite:'auto'}));
+        const enter = context.add(null, () => gsap.to(target,el.matches('.event-poster, .world-card') ? {scale:1.035,duration:.45,ease:'power3.out',overwrite:'auto'} : {x:3,y:-3,duration:.2,overwrite:'auto'}));
         const leave = context.add(null, () => gsap.to(target,{scale:1,x:0,y:0,duration:.45,overwrite:'auto'}));
         el.addEventListener('pointerenter',enter); el.addEventListener('pointerleave',leave);
         cleanups.push(() => {el.removeEventListener('pointerenter',enter);el.removeEventListener('pointerleave',leave);});
@@ -80,7 +96,7 @@
         const url = new URL(link.href,location.href);
         if (url.origin !== location.origin || !url.pathname.endsWith('.html') || (url.pathname === location.pathname && url.search === location.search)) return;
         e.preventDefault();
-        gsap.fromTo(veil,{yPercent:100},{yPercent:0,duration:.38,ease:'power3.inOut',overwrite:true,onComplete:() => location.assign(url.href)});
+        gsap.fromTo(veil,{yPercent:100},{yPercent:0,duration:.26,ease:'power3.inOut',overwrite:true,onComplete:() => location.assign(url.href)});
       });
       document.addEventListener('click',navigate);
       cleanups.push(() => document.removeEventListener('click',navigate));
@@ -102,6 +118,11 @@
       if (!item.hidden) count++;
     });
     document.getElementById('filter-status').textContent = `Показано движей: ${count}`;
+    if (window.gsap && matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      const visible = [...document.querySelectorAll('[data-kind]')].filter(item => !item.hidden);
+      gsap.killTweensOf(visible);
+      gsap.fromTo(visible,{opacity:.6,y:8},{opacity:1,y:0,duration:.25,stagger:.035,ease:'power2.out',clearProps:'opacity,transform'});
+    }
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }));
 
@@ -163,4 +184,5 @@
     finally { submit.disabled=false; submit.firstChild.textContent='Отправить заявку '; }
   });
 })();
+
 
