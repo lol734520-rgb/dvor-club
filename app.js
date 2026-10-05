@@ -81,7 +81,29 @@
         gsap.from(el,{clipPath:'inset(100% 0 0 0)',y:32,duration:1.05,ease:'power4.out',scrollTrigger:{trigger:el,start:'top 92%',once:true}});
       });
       const stripe = document.querySelector('.motion-strip-track');
-      if (stripe) gsap.fromTo(stripe,{xPercent:3},{xPercent:-12,ease:'none',scrollTrigger:{trigger:stripe.parentElement,start:'top bottom',end:'bottom top',scrub:1}});
+      if (stripe) {
+        const strip = stripe.parentElement;
+        const groups = [...stripe.querySelectorAll('.motion-strip-group')];
+        const fill = () => {
+          while(groups[0].getBoundingClientRect().width < strip.clientWidth + 1) {
+            groups[0].append(groups[0].firstElementChild.cloneNode(true));
+          }
+          if(groups[1].children.length !== groups[0].children.length) {
+            groups[1].replaceChildren(...[...groups[0].children].map(node => node.cloneNode(true)));
+          }
+        };
+        fill();
+        const loop = gsap.to(stripe,{xPercent:-50,duration:groups[0].getBoundingClientRect().width/65,repeat:-1,ease:'none',paused:true});
+        const resize = new ResizeObserver(() => {fill();loop.duration(groups[0].getBoundingClientRect().width/65);});
+        resize.observe(strip);
+        document.fonts.ready.then(() => {fill();loop.duration(groups[0].getBoundingClientRect().width/65);});
+        let inView = false;
+        const sync = () => {if(inView && !document.hidden) loop.play(); else loop.pause();};
+        const observer = new IntersectionObserver(entries => {inView=entries[0].isIntersecting;sync();});
+        observer.observe(strip);
+        document.addEventListener('visibilitychange',sync);
+        cleanups.push(() => {observer.disconnect();resize.disconnect();document.removeEventListener('visibilitychange',sync);});
+      }
       if (context.conditions.pointer) document.querySelectorAll('.event-poster, .world-card, .event-teaser, .button').forEach(el => {
         const target = el.querySelector('img, b, svg.arrow, span[aria-hidden]');
         if (!target) return;

@@ -33,3 +33,6 @@ html{scrollbar-color:var(--line) var(--bg)}input,textarea{caret-color:var(--acce
 @media(max-width:1000px){.hero{gap:22px}.hero-stamp{left:-15px;padding:13px 17px}.worlds-heading{align-items:start}.world-caption{padding-inline:20px}}
 @media(max-width:700px){.hero{gap:35px}.hero-stage{padding-inline:6px}.hero-art{width:100%;transform:rotate(1deg)}.hero-stamp{left:-3px;bottom:34px;padding:13px 18px;font-size:28px}.hero-copy{padding-bottom:0}.hero-art-caption{padding-top:20px}.worlds{padding-block:55px 65px}.worlds-heading{display:block;margin-bottom:28px}.worlds-heading h2{font-size:46px}.worlds-heading p{margin-top:22px;max-width:36ch;font-size:15px}.world-grid{grid-template-columns:1fr;gap:20px}.world-coop{grid-row:auto}.world-card img,.world-coop img{height:auto;min-height:0;aspect-ratio:1.3}.world-caption{padding-bottom:20px}.world-caption h3{font-size:34px}}
 @media(prefers-reduced-motion:reduce){.button:hover{transform:none;box-shadow:none}}
+
+/* Two identical groups share one continuous loop. */
+.motion-strip-track{display:flex;width:max-content}.motion-strip-group{display:flex;flex:0 0 auto}.motion-strip-unit{display:block;flex:0 0 auto}
