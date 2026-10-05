@@ -26,22 +26,70 @@
   const desktop = matchMedia('(min-width:701px)');
   desktop.addEventListener('change', (e) => { if (e.matches) closeMenu(); });
 
-  // Animation never controls content availability. Without GSAP, everything stays visible.
+  // Native scrolling, GSAP choreography. All content works without animation.
   if (window.gsap && window.ScrollTrigger) {
     gsap.registerPlugin(ScrollTrigger);
     const mm = gsap.matchMedia();
-    mm.add('(prefers-reduced-motion: no-preference)', () => {
+    const veil = document.createElement('div');
+    veil.className = 'page-veil'; veil.setAttribute('aria-hidden', 'true');
+    veil.innerHTML = '<span>ДВОР</span>'; document.body.append(veil);
+    mm.add({motion:'(prefers-reduced-motion: no-preference)', desktop:'(min-width:701px)', pointer:'(hover:hover) and (pointer:fine)'}, context => {
+      if (!context.conditions.motion) return;
+      const cleanups = [];
       const intro = document.querySelector('.hero-copy, .page-intro, .join-heading, .legal');
-      if (intro) gsap.timeline({defaults:{duration:.75,ease:'power3.out'}})
-        .from(intro.querySelectorAll(':scope > .eyebrow, :scope > h1, :scope > p:not(.eyebrow), :scope > .button'), {y:35, autoAlpha:0, stagger:.12});
+      const title = intro?.querySelector('h1');
+      const tl = gsap.timeline({defaults:{duration:1,ease:'power4.out'}});
+      if (title) {
+        const lines = title.querySelectorAll(':scope > span');
+        tl.from(lines.length ? lines : title, {y:55,autoAlpha:0,clipPath:'inset(100% 0 0 0)',stagger:.14}, .06);
+      }
+      if (intro) tl.from(intro.querySelectorAll(intro.matches('.legal') ? ':scope > .eyebrow' : ':scope > .eyebrow, :scope > p:not(.eyebrow), :scope > .button'), {y:22,autoAlpha:0,stagger:.1,duration:.8}, .28);
+      const hero = document.querySelector('.hero');
       const art = document.querySelector('.hero-art');
       if (art) {
-        gsap.from(art, {y:25, autoAlpha:0, duration:1, ease:'power3.out', delay:.2});
-        gsap.to(art.querySelector('img'), {scale:1.06,ease:'none',scrollTrigger:{trigger:art,start:'top 15%',end:'bottom top',scrub:1}});
+        tl.from(art, {clipPath:'inset(0 0 100% 0)',autoAlpha:0,rotation:0,duration:1.25}, .12);
+        const artImage = art.querySelector('img');
+        tl.from(artImage,{scale:1.18,duration:1.7}, .12);
+        gsap.fromTo(artImage,{yPercent:-4,scale:1.1},{yPercent:6,scale:1.2,ease:'none',immediateRender:false,scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1.2}});
+        if (context.conditions.desktop) gsap.to('.hero-copy',{y:75,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:1}});
       }
-      gsap.utils.toArray('.reveal').forEach(el => gsap.from(el,{y:32,autoAlpha:0,duration:.7,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 90%',once:true}}));
+      document.querySelectorAll('.reveal').forEach(el => {
+        // Do not hide cards that can be revealed by a category filter.
+        if (el.matches('.event-poster')) return;
+        gsap.from(el,{y:45,autoAlpha:0,duration:.95,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 91%',once:true}});
+      });
+      document.querySelectorAll('.feature-image img, .join-art img').forEach(img => {
+        gsap.fromTo(img,{scale:1.12,yPercent:-3},{scale:1.02,yPercent:3,ease:'none',scrollTrigger:{trigger:img.parentElement,start:'top bottom',end:'bottom top',scrub:1.1}});
+      });
+      document.querySelectorAll('.closing h2, .rules > h2, .home-events > h2').forEach(el => {
+        gsap.from(el,{clipPath:'inset(100% 0 0 0)',y:32,duration:1.05,ease:'power4.out',scrollTrigger:{trigger:el,start:'top 92%',once:true}});
+      });
+      const stripe = document.querySelector('.motion-strip-track');
+      if (stripe) gsap.fromTo(stripe,{xPercent:3},{xPercent:-12,ease:'none',scrollTrigger:{trigger:stripe.parentElement,start:'top bottom',end:'bottom top',scrub:1}});
+      if (context.conditions.pointer) document.querySelectorAll('.event-poster, .event-teaser, .button').forEach(el => {
+        const target = el.querySelector('img, b, span[aria-hidden]');
+        if (!target) return;
+        const enter = context.add(null, () => gsap.to(target,el.matches('.event-poster') ? {scale:1.045,duration:.65,ease:'power3.out',overwrite:'auto'} : {x:4,y:-4,duration:.3,overwrite:'auto'}));
+        const leave = context.add(null, () => gsap.to(target,{scale:1,x:0,y:0,duration:.45,overwrite:'auto'}));
+        el.addEventListener('pointerenter',enter); el.addEventListener('pointerleave',leave);
+        cleanups.push(() => {el.removeEventListener('pointerenter',enter);el.removeEventListener('pointerleave',leave);});
+      });
+      const navigate = context.add(null, e => {
+        const link = e.target.closest('a[href]');
+        if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || link.target || link.hasAttribute('download')) return;
+        const url = new URL(link.href,location.href);
+        if (url.origin !== location.origin || !url.pathname.endsWith('.html') || (url.pathname === location.pathname && url.search === location.search)) return;
+        e.preventDefault();
+        gsap.fromTo(veil,{yPercent:100},{yPercent:0,duration:.38,ease:'power3.inOut',overwrite:true,onComplete:() => location.assign(url.href)});
+      });
+      document.addEventListener('click',navigate);
+      cleanups.push(() => document.removeEventListener('click',navigate));
+      return () => {cleanups.forEach(fn => fn()); gsap.set(veil,{clearProps:'all'});};
     });
-    window.addEventListener('pagehide', () => mm.revert(), {once:true});
+    // Restore the overlay when the browser returns a page from its back/forward cache.
+    window.addEventListener('pageshow', e => {if (e.persisted) {gsap.set(veil,{clearProps:'all'}); ScrollTrigger.refresh();}});
+    document.fonts.ready.then(() => ScrollTrigger.refresh());
+    window.addEventListener('load', () => ScrollTrigger.refresh(), {once:true});
   }
 
   const filterButtons = [...document.querySelectorAll('[data-filter]')];
@@ -59,7 +107,11 @@
 
   const form = document.getElementById('join-form');
   if (!form) return;
-  const endpoint = window.DVOR_CONFIG?.applicationEndpoint || '';
+  const config = window.DVOR_CONFIG || {};
+  const endpoint = config.applicationsEnabled === true && config.legalReady === true && config.consentVersion && !config.consentVersion.startsWith('draft') ? config.applicationEndpoint || '' : '';
+  const consentRow = document.getElementById('consent-row');
+  consentRow.hidden = !endpoint;
+  form.elements.consent.required = Boolean(endpoint);
   const status = document.getElementById('form-status');
   const submit = form.querySelector('[type=submit]');
   const notice = document.getElementById('form-notice');
@@ -91,9 +143,10 @@
     if (!form.reportValidity()) return;
     const data = Object.fromEntries(fields.map(name => [name,form.elements[name].value.trim()]));
     data.consent = form.elements.consent.checked;
+    if (endpoint) data.consentVersion = config.consentVersion;
     data.website = form.elements.website.value;
     if (!endpoint) {
-      try { localStorage.setItem(draftKey, JSON.stringify(data)); showStatus('Черновик сохранён на этом устройстве. Заявка организатору не отправлена.'); }
+      try { localStorage.setItem(draftKey, JSON.stringify(Object.fromEntries(fields.map(name => [name,data[name]])))); showStatus('Черновик сохранён на этом устройстве. Заявка организатору не отправлена.'); }
       catch { showStatus('Браузер не разрешил сохранить черновик. Скопируй текст заявки вручную.', 'error'); }
       return;
     }
@@ -110,3 +163,4 @@
     finally { submit.disabled=false; submit.firstChild.textContent='Отправить заявку '; }
   });
 })();
+
